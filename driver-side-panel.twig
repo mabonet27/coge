@@ -1,0 +1,319 @@
+
+<div class="driver-side-panel__header" >
+    <div>
+        <img src="{{ base_url() }}/img/default-image.jpg">
+    </div>
+    <div>
+        <p><a href="{{ path_for('admin.users.drivers.edit', { 'id': driver.user.id }) }}">{{ driver.user.name }}</a></p>
+        {% if driver.vehicle_name %}
+            <p class="driver-side-panel__header_info">Vehicle:
+                <span>{{ driver.vehicle_name }}</span>
+            </p>
+        {% endif %}
+        {% if driver.trailer_number %}
+            <p class="driver-side-panel__header_info">Trailer:
+                <span>{{ driver.trailer_number }}</span>
+            </p>
+        {% endif %}
+        <p class="driver-side-panel__header_info">Hazmat:
+            <span>
+        {% if driver.hazmat_enabled %}Yes{% else %}No{% endif %}
+      </span>
+        </p>
+        <p class="driver-side-panel__header_info">Last Contact:
+            <span>
+        {% if driver.beacon.updated_at %}{{ driver.beacon.updated_at|date("g:i a M j") }}{% else %}n/a{% endif %}
+      </span>
+        </p>
+    </div>
+</div>
+
+<div class="driver-side-panel__itinerary current active" xmlns="http://www.w3.org/1999/html">
+    <div class="flex-container itinerary-header" style="padding: 0px !important;border-bottom: 2px #dbdbdb solid;">
+        <div>
+            {#{% if driver.type == "ltl" %}#}
+                {#<i id="routineButton" class="material-icons" title="Routine">group_work</i>#}
+            {#{% endif %}#}
+
+            <a href="{{ path_for('admin.map-view.driver-side-panel.request-new-itinerary', {}, { 'drivers_id': driver.id, 'department': driver.type }) }}">
+                <i class="material-icons" title="New itinerary">add</i>
+            </a>
+        </div>
+        <div>
+            <p style="margin: 3px; text-align: center;"
+               title="Itinerary id #{{ driver.itinerary.id }} - {{ driver.itinerary.created_at|date("M j, Y") }}">
+                Itinerary</p>
+        </div>
+        {% if driver.previous_itinerary %}
+            <div>
+                <i class="material-icons previous_itinerary" title="Previous Itinerary">navigate_next</i>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if  driver.routines_list is defined and driver.routines_list|length > 0 %}
+
+    <ul class="itinerary-list" id="itinerary-list">
+        {% for routine in driver.routines_list.routines %}
+            {% include 'admin/map-view/components/routine.twig' %}
+        {% endfor %}
+    </ul>
+
+    <div class="driver-side-panel__footer flex-container">
+        <div><p>Unloaded: {{ miles.unloaded }}</p></div>
+        <div><p>Loaded: {{ miles.loaded }}</p></div>
+        <div><p>Total: {{ miles.loaded + miles.unloaded }}</p></div>
+    </div>
+</div>
+
+{% if driver.previous_itinerary %}
+    <div class="driver-side-panel__itinerary previous">
+        <div class="flex-container itinerary-header">
+            <div><i class="material-icons current_itinerary" title="Back to current itinerary">navigate_before</i>
+            </div>
+            <div>
+                <small>{{ driver.previous_itinerary.created_at|date("M j, Y") }} Itinerary
+                    #{{ driver.previous_itinerary.id }}</small>
+            </div>
+        </div>
+
+        <ul class="itinerary-list">
+            {% for key, leg in driver.jobs_legs_order %}
+                {% set type = key|split('-')[0] %}
+                {% if type == 'i' %}
+                    {% include 'admin/map-view/components/previous_itinerary.twig' %}
+                {% endif %}
+            {% endfor %}
+        </ul>
+        <div class="driver-side-panel__footer flex-container">
+            <div><p>Unloaded: {{ driver.previous_itinerary.miles.unloaded }}</p></div>
+            <div><p>Loaded: {{ driver.previous_itinerary.miles.loaded }}</p></div>
+            <div><p>
+                    Total: {{ driver.previous_itinerary.miles.loaded + driver.previous_itinerary.miles.unloaded }}</p>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% else %}
+
+    {% if  driver.routines is defined and driver.routines|length > 0 %}
+
+        {% for routine in driver.routines %}
+            {% include 'admin/map-view/components/routine.twig' %}
+        {% endfor %}
+
+
+    <div class="driver-side-panel__footer flex-container">
+        <div><p>Unloaded: {{ miles.unloaded }}</p></div>
+        <div><p>Loaded: {{ miles.loaded }}</p></div>
+        <div><p>Total: {{ miles.loaded + miles.unloaded }}</p></div>
+    </div>
+</div>
+
+{% if driver.previous_itinerary %}
+    <div class="driver-side-panel__itinerary previous">
+        <div class="flex-container itinerary-header">
+            <div><i class="material-icons current_itinerary" title="Back to current itinerary">navigate_before</i>
+            </div>
+            <div>
+                <small>{{ driver.previous_itinerary.created_at|date("M j, Y") }} Itinerary
+                    #{{ driver.previous_itinerary.id }}</small>
+            </div>
+        </div>
+
+        <ul class="itinerary-list">
+            {% for key, leg in driver.routines %}
+
+                    {% include 'admin/map-view/components/previous_itinerary.twig' %}
+
+            {% endfor %}
+        </ul>
+        <div class="driver-side-panel__footer flex-container">
+            <div><p>Unloaded: {{ driver.previous_itinerary.miles.unloaded }}</p></div>
+            <div><p>Loaded: {{ driver.previous_itinerary.miles.loaded }}</p></div>
+            <div><p>
+                    Total: {{ driver.previous_itinerary.miles.loaded + driver.previous_itinerary.miles.unloaded }}</p>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% else %}
+
+    {% if driver.itinerary.legs is empty %}
+
+        <p class="empty-itinerary">No legs have been assigned</p>
+    {% else %}
+        <ul class="itinerary-list" id="itinerary-list">
+
+            {% for leg in driver.itinerary.legs %}
+
+                <li position="{{ leg.position }}" legs-id="{{ leg.id }}" job_type="{{ leg.job.ltl.job_type }}"
+                    job-id="{{ 'l-'~leg.id }}">
+                    <div class="itinerary-entry-header flex-container {{ leg.itinerary_status }}">
+                        <div>
+                            <small>{{ leg.status }}</small>
+                        </div>
+                        <div>
+                            <p title="Leg: {{ leg.id }}">
+                                {% if leg.jobs_id %}
+                                    <a href="{{ path_for('admin.edit-shipment', { 'id': leg.jobs_id }) }}">
+                                        {% if leg.job.type == 'truckloads' %}Bk: {{ leg.job.booking_number }}
+                                        {% elseif leg.job.type == 'containers' and leg.job.containers.trade_type == 'import' %}Cntr: {{ leg.job.containers.container_number }}
+                                        {% elseif leg.job.type == 'containers' and leg.job.containers.trade_type == 'export' %}Bk: {{ leg.job.booking_number }}
+                                        {% elseif leg.job.type == 'ltl' %}Bk: {{ leg.job.booking_number }}
+                                        {% else %}Job: {{ leg.jobs_id }}
+                                        {% endif %}
+                                    </a>
+                                {% else %}
+                                    n/a
+                                {% endif %}
+                            </p>
+
+                        </div>
+                        <div><p>{{ leg.metric_loaded.miles }} miles</p></div>
+                    </div>
+                    <div class="itinerary-entry-body flex-container">
+
+                        <div>
+                            <p>{{ leg.origin.address.name|capitalize }}</p>
+                            <small>{{ leg.origin.address.city|capitalize }}, {{ leg.origin.address.state|capitalize }}
+                                - {{ leg.origin.address.zip }}</small>
+                        </div>
+                        <div>
+                            <p>{{ leg.destination.address.name|capitalize }}</p>
+                            <small>{{ leg.destination.address.city|capitalize }}
+                                , {{ leg.destination.address.state|capitalize }}
+                                - {{ leg.destination.address.zip }}</small>
+                        </div>
+                        <small>({{ leg.job.ltl.job_type }})</small>
+
+                        {% if leg.itinerary_status == 'pending' %}
+                            <div class="cancel_itinerary">
+                                <a href="{{ path_for('admin.map-view.undispatch', {}, { 'legs_id': leg.id, 'department': driver.type, 'drivers_id': driver.id } ) }}">
+                                    <i class="material-icons">cancel</i>
+                                </a>
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="itinerary-entry-body-fold flex-container">
+                        <div>
+                            <p>
+                                Ready: {% if leg.origin.ready %}{{ leg.origin.ready|date("g:i a M j, Y ") }}{% else %}N/A{% endif %}
+                                <br>Cut-off: {% if leg.origin.cut_off %}{{ leg.origin.cut_off|date("g:i a M j, Y ") }}{% else %}N/A{% endif %}
+                            </p>
+                        </div>
+                        <div>
+                            <p>
+                                Ready: {% if leg.destination.ready %}{{ leg.destination.ready|date("g:i a M j, Y ") }}{% else %}N/A{% endif %}
+                                <br>Cut-off: {% if leg.destination.cut_off %}{{ leg.destination.cut_off|date("g:i a M j, Y ") }}{% else %}N/A{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    {% if leg.status == "completed" %}
+                        <div class="itinerary-entry-body-fold flex-container">
+                            <div>
+                                <p style="text-align: center; background-color: #d3d3d3">Complete
+                                    Date: {{ leg.updated_at|date("g:i a M j, Y ") }}</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+
+        <div class="driver-side-panel__footer flex-container">
+            <div><p>Unloaded: {{ miles.unloaded }}</p></div>
+            <div><p>Loaded: {{ miles.loaded }}</p></div>
+            <div><p>Total: {{ miles.loaded + miles.unloaded }}</p></div>
+        </div>
+    {% endif %}
+    </div>
+
+
+    {% if driver.previous_itinerary %}
+        <div class="driver-side-panel__itinerary previous">
+            <div class="flex-container itinerary-header">
+                <div><i class="material-icons current_itinerary" title="Back to current itinerary">navigate_before</i>
+                </div>
+                <div>
+                    <small>{{ driver.previous_itinerary.created_at|date("M j, Y") }} Itinerary
+                        #{{ driver.previous_itinerary.id }}</small>
+                </div>
+            </div>
+
+            <ul class="itinerary-list">
+                {% for leg in driver.previous_itinerary.legs %}
+
+                    <li position="{{ leg.position }}" legs-id="{{ leg.id }}" job-id="{{ 'i-'~leg.id }}">
+                        <div class="itinerary-entry-header flex-container {{ leg.itinerary_status }}">
+                            <div>
+                                <small>{{ leg.status }}</small>
+                            </div>
+                            <div>
+                                <p title="Leg: {{ leg.id }}">
+                                    {% if leg.jobs_id %}
+                                        <a href="{{ path_for('admin.edit-shipment', { 'id': leg.jobs_id }) }}">Job: {{ leg.jobs_id }}</a>
+                                    {% else %}
+                                        n/a
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div><p>{{ leg.metric_loaded.miles }} miles</p></div>
+                        </div>
+                        <div class="itinerary-entry-body flex-container">
+                            <div>
+                                <p>{{ leg.origin.address.name|capitalize }}</p>
+                                <small>{{ leg.origin.address.city|capitalize }}
+                                    , {{ leg.origin.address.state|capitalize }}
+                                    - {{ leg.origin.address.zip }}</small>
+                            </div>
+                            <div>
+                                <p>{{ leg.destination.address.name|capitalize }}</p>
+                                <small>{{ leg.destination.address.city|capitalize }}
+                                    , {{ leg.destination.address.state|capitalize }}
+                                    - {{ leg.destination.address.zip }}</small>
+                            </div>
+
+                            {% if leg.itinerary_status == 'pending' %}
+
+                                <div class="cancel_itinerary">
+                                    <a href="{{ path_for('admin.map-view.undispatch', {}, { 'legs_id': leg.id, 'department': driver.type, 'drivers_id': driver.id } ) }}">
+                                        <i class="material-icons">cancel</i>
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="itinerary-entry-body-fold flex-container">
+                            <div>
+                                <p>
+                                    Ready: {% if leg.origin.ready %}{{ leg.origin.ready|date("M j, Y") }}{% else %}N/A{% endif %}
+                                    <br>Cut-off: {% if leg.origin.cut_off %}{{ leg.origin.cut_off|date("M j, Y") }}{% else %}N/A{% endif %}
+                                </p>
+                            </div>
+                            <div>
+                                <p>
+                                    Ready: {% if leg.destination.ready %}{{ leg.destination.ready|date("M j, Y") }}{% else %}N/A{% endif %}
+                                    <br>Cut-off: {% if leg.destination.cut_off %}{{ leg.destination.cut_off|date("M j, Y") }}{% else %}N/A{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+            <div class="driver-side-panel__footer flex-container">
+                <div><p>Unloaded: {{ driver.previous_itinerary.miles.unloaded }}</p></div>
+                <div><p>Loaded: {{ driver.previous_itinerary.miles.loaded }}</p></div>
+                <div><p>
+                        Total: {{ driver.previous_itinerary.miles.loaded + driver.previous_itinerary.miles.unloaded }}</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endif %}
+{% endif %}
+
+
+

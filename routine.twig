@@ -1,0 +1,72 @@
+<li class="routine-block" routine-id="{{ routine.id }}" position="{{ routine.position }}"
+    style="margin-left: auto" draggable="true" drivers-id="{{ driver.id }}">
+    <div id="header" class="itinerary-entry-header flex-container" style="text-align: center">
+        <small>
+            <a class="link" name="edit-routine" style="cursor:pointer;" title="Edit Routine"
+               routine-id= {{ routine.id }} ;
+               routine-created= {{ routine.created_at|date("g:i a M j, Y ") }}>
+                <i class="material-icons">edit</i>
+            </a>
+            Routine ID: {{ routine.id }} Created
+            at: {{ routine.created_at|date("g:i a M j, Y ") }}
+            <i id="cancel-routine" style="cursor: pointer"
+               routine-id= {{ routine.id }} title="Cancel" class="material-icons">cancel</i>
+            </a>
+        </small>
+    </div>
+    <ul class="itinerary-list" style="padding: 7px !important; border-bottom: 3px #dbdbdb solid;">
+        {% for leg in routine.routine_legs %}
+            <li class="li-legs-routine" legs-id="{{ leg.point_a.job.legs[0].id }}"
+                job_type="{{ leg.point_a.job.ltl.job_type }}" job-id="{{ leg.point_a.job.id }}">
+                <div class="itinerary-entry-header flex-container {{ leg.point_a.job.legs[0].status }}">
+                    <div>
+                        <small>{{ leg.point_a.job.legs[0].status }}</small>
+                    </div>
+                    <div>
+                        <p title="Leg: {{ leg.point_a.job.legs[0].id }}">
+                            {% if leg.point_a.job.legs[0].id %}
+                                <a href="{{ path_for('admin.edit-shipment', { 'id': leg.point_a.job.legs[0].id }) }}">
+                                    {% if leg.point_a.job.type == 'ltl' %}Bk: {{ leg.point_a.job.booking_number }}
+                                    {% endif %}
+                                </a>
+                            {% else %}
+                                n/a
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="itinerary-entry-body flex-container" style="padding: 3px !important;">
+                    <div>
+                        <p>{{ leg.point_a.address.name|capitalize }}</p>
+                        <small>{{ leg.point_a.address.city|capitalize }}
+                            , {{ leg.point_a.address.state|capitalize }}
+                            - {{ leg.point_a.address.zip }}</small>
+                    </div>
+                    <div>
+                        <p>{{ leg.point_b.address.name|capitalize }}</p>
+                        <small>{{ leg.point_b.address.city|capitalize }}
+                            , {{ leg.point_b.address.state|capitalize }}
+                            - {{ leg.point_b.address.zip }}</small>
+                    </div>
+                    <small>({{ leg.point_a.job.ltl.job_type }})</small>
+
+                    {% if leg.point_a.job.legs[0].status == 'dispatched to drivers' or leg.point_a.job.legs[0].status == 'accepted' %}
+
+                        <a class="" name="remove-leg" style="cursor:pointer;" title="Remove Leg"
+                           routine-id= {{ routine.id }}>
+                            <i id="remove-leg" class="material-icons" leg-id= {{ leg.id }}>delete</i>
+                        </a>
+
+                        <div class="cancel_itinerary">
+                            <a href="{{ path_for('admin.map-view.undispatch', {}, { 'legs_id': leg.point_a.job.id, 'department': driver.type, 'drivers_id': driver.id } ) }}">
+                                <i class="material-icons">cancel</i>
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+</li>
+
